@@ -1,0 +1,1172 @@
+3.	Create Bank application in SalesForce.com using Apex programming Language.
+
+
+ChatGPT said:
+Here’s a step-by-step guide to create a simple Bank Application in Salesforce.com using Apex, covering object creation, Apex code, and basic logic like deposits and withdrawals.
+
+🔧 Step 1: Create Custom Objects in Salesforce
+Go to Setup → Object Manager → Create New Object.
+
+1.1 Create Bank_Account__c Object
+Label: Bank Account
+
+Plural Label: Bank Accounts
+
+Object Name: Bank_Account
+
+Enable: Allow Reports, Activities
+
+1.2 Add Fields to Bank_Account__c
+Field Label	API Name	Type
+Account Number	Account_Number__c	Text
+Customer Name	Customer_Name__c	Text
+Balance	Balance__c	Currency
+Account Type	Account_Type__c	Picklist (e.g., Savings, Current)
+
+💻 Step 2: Create Apex Class for Bank Operations
+Go to Developer Console → File → New → Apex Class.
+
+Class Name: BankOperations
+apex
+Copy
+Edit
+public class BankOperations {
+
+    // Method to deposit amount
+    public static void deposit(String accountNumber, Decimal amount) {
+        Bank_Account__c acc = [SELECT Id, Balance__c FROM Bank_Account__c WHERE Account_Number__c = :accountNumber LIMIT 1];
+        acc.Balance__c += amount;
+        update acc;
+    }
+
+    // Method to withdraw amount
+    public static void withdraw(String accountNumber, Decimal amount) {
+        Bank_Account__c acc = [SELECT Id, Balance__c FROM Bank_Account__c WHERE Account_Number__c = :accountNumber LIMIT 1];
+        if (acc.Balance__c >= amount) {
+            acc.Balance__c -= amount;
+            update acc;
+        } else {
+            throw new AuraHandledException('Insufficient balance!');
+        }
+    }
+
+    // Method to view balance
+    public static Decimal viewBalance(String accountNumber) {
+        Bank_Account__c acc = [SELECT Balance__c FROM Bank_Account__c WHERE Account_Number__c = :accountNumber LIMIT 1];
+        return acc.Balance__c;
+    }
+}
+🧪 Step 3: Test in Anonymous Window (Developer Console)
+Go to Debug → Open Execute Anonymous Window, and try the following examples:
+
+apex
+Copy
+Edit
+// Deposit 1000 to account
+BankOperations.deposit('ACC1001', 1000);
+
+// Withdraw 500 from account
+BankOperations.withdraw('ACC1001', 500);
+
+// View balance
+Decimal bal = BankOperations.viewBalance('ACC1001');
+System.debug('Balance: ' + bal);
+✅ Optional Enhancements
+Add Triggers to log transactions.
+
+Create a Transaction__c object to record history.
+
+Use Lightning Web Components (LWC) for a UI front-end.
+
+📘 Summary
+Component	Purpose
+Bank_Account__c	Custom object for storing accounts
+BankOperations	Apex class with deposit/withdraw/view methods
+Anonymous Apex	Used to test and invoke methods
+
+Would you like to extend this to include a transaction log or a Lightning UI component next?
+
+
+
+
+
+
+
+You said:
+how to verify now
+
+
+ChatGPT said:
+To verify that your Bank Application in Salesforce works correctly, follow these steps using both the Salesforce UI and Developer Console:
+
+✅ Step 1: Verify the Custom Object and Record
+A. Go to the App Launcher:
+Click the App Launcher (9 dots) → Search for Bank Accounts.
+
+Open the Bank Account tab.
+
+Create a new Bank Account record:
+
+Account Number: ACC1001
+
+Customer Name: John Doe
+
+Balance: 5000
+
+Account Type: Savings
+
+✅ Step 2: Test Apex Methods via Developer Console
+A. Open Developer Console:
+Click your avatar → Developer Console
+
+B. Open Execute Anonymous Window:
+Go to: Debug → Open Execute Anonymous Window
+
+To deposit:
+apex
+Copy
+Edit
+BankOperations.deposit('ACC1001', 1000);
+Click Execute.
+
+To withdraw:
+apex
+Copy
+Edit
+BankOperations.withdraw('ACC1001', 500);
+Click Execute.
+
+To view balance:
+apex
+Copy
+Edit
+Decimal bal = BankOperations.viewBalance('ACC1001');
+System.debug('Balance: ' + bal);
+Click Execute, then go to Logs → open the most recent log → search DEBUG.
+
+You should see:
+
+yaml
+Copy
+Edit
+Balance: 5500
+✅ Step 3: Confirm in UI
+Go back to the Bank Accounts tab.
+
+Open record ACC1001.
+
+Check if the Balance field is now updated to reflect the changes.
+
+🔄 Optional: Add Debug Logs
+To see method activity in logs:
+
+In Setup, go to Debug Logs.
+
+Add yourself as a monitored user.
+
+Re-run the Apex methods.
+
+Open logs to see the method flow and values.
+
+Would you like to set up a trigger or transaction history to track all operations next?
+
+
+
+
+
+
+
+You said:
+where is app launcher
+ChatGPT said:
+The App Launcher in Salesforce is located in the top-left corner of the Salesforce interface.
+
+Here’s how to find and use it:
+
+✅ Steps to Open the App Launcher
+Login to Salesforce (https://login.salesforce.com)
+
+On the top-left corner, look for the grid icon (9 dots in a square shape) — this is the App Launcher.
+
+It’s usually just to the left of the “Home” tab or “Setup” gear icon.
+
+Click the App Launcher icon.
+
+A search bar will appear where you can type the name of your app or object.
+
+🔍 Example: Open Bank Accounts
+After clicking the App Launcher, type Bank Accounts.
+
+Click on the Bank Accounts item (your custom object).
+
+You’ll now see the list of records or the “New” button to create a new Bank Account.
+
+If you're not seeing the object:
+
+Ensure you’ve added the Bank_Account__c object to a custom app or a Lightning app page.
+
+Or navigate via Object Manager → Bank_Account__c → Tab Settings and ensure it's set to "Default On".
+
+Would you like help creating a custom tab for Bank Account to show it directly in the app bar?
+
+
+
+
+
+
+
+You said:
+Line: 4, Column: 1
+System.QueryException: List has no rows for assignment to SObjec
+
+
+ChatGPT said:
+The error you're getting:
+
+System.QueryException: List has no rows for assignment to SObject
+
+means that your SOQL query didn’t return any records, but you're trying to assign the result directly to a single object variable.
+
+🔍 Cause
+In your code, you likely have something like this:
+
+apex
+Copy
+Edit
+Bank_Account__c acc = [SELECT Id, Balance__c FROM Bank_Account__c WHERE Account_Number__c = :accountNumber LIMIT 1];
+If no matching Bank_Account__c record exists with that Account_Number__c, it throws this error because it's trying to assign a null result to a non-list SObject.
+
+✅ Solution
+Wrap your query in a try-catch, or use List<Bank_Account__c> and handle empty results safely:
+
+apex
+Copy
+Edit
+List<Bank_Account__c> accList = [SELECT Id, Balance__c FROM Bank_Account__c WHERE Account_Number__c = :accountNumber LIMIT 1];
+
+if (!accList.isEmpty()) {
+    Bank_Account__c acc = accList[0];
+    // Proceed with deposit/withdraw logic
+} else {
+    System.debug('No account found with Account Number: ' + accountNumber);
+    // Optionally throw a custom error
+    throw new AuraHandledException('Account not found.');
+}
+🔄 Or: Use getSObjectType() with try-catch
+apex
+Copy
+Edit
+try {
+    Bank_Account__c acc = [SELECT Id, Balance__c FROM Bank_Account__c WHERE Account_Number__c = :accountNumber LIMIT 1];
+    // Do something with acc
+} catch (QueryException e) {
+    System.debug('Error: ' + e.getMessage());
+    throw new AuraHandledException('Account not found.');
+}
+✅ Tip for Testing
+Make sure you have created a record with that specific Account Number (ACC1001) via:
+
+App Launcher > Bank Accounts > New
+
+Would you like help writing a safer version of your deposit() and withdraw() methods with this logic built in?
+
+
+
+
+
+
+
+You said:
+Explain each step in detail to complete the assignent
+ChatGPT said:
+Here's a detailed step-by-step guide to complete the assignment:
+“Create Bank Application in Salesforce.com using Apex programming language.”
+This guide walks you through creating a custom Bank Account object, writing Apex code for deposit/withdrawal, and verifying everything.
+
+✅ STEP 1: Setup a Salesforce Developer Account
+If you haven’t already:
+
+Go to: https://developer.salesforce.com/signup
+
+Fill in your details to create a free developer org.
+
+Log in to https://login.salesforce.com
+
+✅ STEP 2: Create a Custom Object — Bank Account
+Click the gear icon (Setup) in the top-right → Click Setup.
+
+In Quick Find (left sidebar), type Objects → Click Object Manager.
+
+Click Create → Custom Object.
+
+Fill the form:
+
+Label: Bank Account
+
+Object Name: Bank_Account
+
+Record Name: Account Number (choose Auto Number or Text)
+
+Enable Allow Reports, Allow Activities, and Track Field History.
+
+Click Save.
+
+✅ STEP 3: Add Custom Fields
+Go to the Fields & Relationships section of your new Bank Account object, then click New to add each of these:
+
+Field Label	Data Type	API Name
+Customer Name	Text	Customer_Name__c
+Balance	Currency	Balance__c
+Account Type	Picklist	Account_Type__c
+
+Example values for Account Type: Savings, Current, Fixed Deposit
+
+Click Save after each field.
+
+✅ STEP 4: Create an Apex Class — BankOperations
+Go to the Setup → Apex Classes (search "Apex Classes" in Quick Find).
+
+Click New.
+
+Paste this code:
+
+apex
+Copy
+Edit
+public class BankOperations {
+
+    public static void deposit(String accountNumber, Decimal amount) {
+        List<Bank_Account__c> accList = [SELECT Id, Balance__c FROM Bank_Account__c WHERE Name = :accountNumber LIMIT 1];
+        if (!accList.isEmpty()) {
+            Bank_Account__c acc = accList[0];
+            acc.Balance__c += amount;
+            update acc;
+        } else {
+            throw new AuraHandledException('Account not found');
+        }
+    }
+
+    public static void withdraw(String accountNumber, Decimal amount) {
+        List<Bank_Account__c> accList = [SELECT Id, Balance__c FROM Bank_Account__c WHERE Name = :accountNumber LIMIT 1];
+        if (!accList.isEmpty()) {
+            Bank_Account__c acc = accList[0];
+            if (acc.Balance__c >= amount) {
+                acc.Balance__c -= amount;
+                update acc;
+            } else {
+                throw new AuraHandledException('Insufficient balance');
+            }
+        } else {
+            throw new AuraHandledException('Account not found');
+        }
+    }
+
+    public static Decimal viewBalance(String accountNumber) {
+        List<Bank_Account__c> accList = [SELECT Id, Balance__c FROM Bank_Account__c WHERE Name = :accountNumber LIMIT 1];
+        if (!accList.isEmpty()) {
+            return accList[0].Balance__c;
+        } else {
+            throw new AuraHandledException('Account not found');
+        }
+    }
+}
+Click Save.
+
+✅ STEP 5: Add a Tab for Bank Account
+In Setup, search for Tabs.
+
+Under Custom Object Tabs, click New.
+
+Select Bank Account.
+
+Choose an icon and enter a tab label.
+
+Click Next → Save.
+
+✅ STEP 6: Add the Tab to a Lightning App (Optional but Recommended)
+Click the App Launcher (9-dot icon, top-left).
+
+Search for Sales App or any app you're using.
+
+Click the gear icon → Edit Page.
+
+Add the Bank Account Tab to the navigation bar.
+
+Save and activate the page.
+
+✅ STEP 7: Create Sample Records
+Open the Bank Account tab.
+
+Click New → Fill in:
+
+Account Number: ACC1001 (or let it auto-generate)
+
+Customer Name: John Doe
+
+Balance: 5000
+
+Account Type: Savings
+
+Save.
+
+✅ STEP 8: Test Apex Methods
+Open Developer Console:
+Click your user icon → Developer Console
+
+Go to Debug → Open Execute Anonymous Window
+
+Run:
+apex
+Copy
+Edit
+// Deposit
+BankOperations.deposit('ACC1001', 1000);
+
+// Withdraw
+BankOperations.withdraw('ACC1001', 500);
+
+// View Balance
+Decimal bal = BankOperations.viewBalance('ACC1001');
+System.debug('Balance: ' + bal);
+Click Execute → Go to Logs → Search DEBUG.
+
+✅ STEP 9: Verify in the UI
+Go back to the Bank Account record ACC1001
+
+Check if the Balance field has updated accordingly.
+
+✅ STEP 10: (Optional) Create a Lightning Component or Flow
+If you're familiar with Lightning, you can create a UI for deposit/withdrawal using:
+
+LWC (Lightning Web Component)
+
+Screen Flow
+
+Aura Components
+
+Let me know if you want help with that!
+
+Would you like a printable PDF of this assignment or a ZIP of all Apex code?
+
+
+
+
+
+
+
+You said:
+Line: 10, Column: 1
+System.AuraHandledException: Script-thrown exception
+ChatGPT said:
+The error you're seeing:
+
+pgsql
+Copy
+Edit
+Line: 10, Column: 1  
+System.AuraHandledException: Script-thrown exception
+means that your Apex method explicitly threw an exception, likely from this line in your code:
+
+apex
+Copy
+Edit
+throw new AuraHandledException('Some error message');
+This is expected behavior if something went wrong, such as:
+
+The Bank_Account__c record with the given name (Account Number) was not found.
+
+Or you're trying to withdraw more than the current balance.
+
+✅ How to Fix and Debug This:
+Let’s go step by step to figure it out.
+
+🔍 Step 1: Check the Account Number
+In your Execute Anonymous window or code, if you’re calling:
+
+apex
+Copy
+Edit
+BankOperations.deposit('ACC1001', 1000);
+Make sure that ‘ACC1001’ actually exists as the Name (Account Number) on a Bank_Account__c record.
+
+🔧 If your object uses Auto Number, the generated name might be something like BA-00001, not ACC1001.
+
+✅ Go to the Bank Account tab in Salesforce → Open a record → Check the value in the Name column.
+
+🧠 Step 2: Modify Apex to Debug
+Modify your BankOperations class temporarily like this:
+
+apex
+Copy
+Edit
+public static void deposit(String accountNumber, Decimal amount) {
+    List<Bank_Account__c> accList = [SELECT Id, Balance__c FROM Bank_Account__c WHERE Name = :accountNumber LIMIT 1];
+    System.debug('Record count: ' + accList.size());
+    
+    if (!accList.isEmpty()) {
+        Bank_Account__c acc = accList[0];
+        acc.Balance__c += amount;
+        update acc;
+    } else {
+        throw new AuraHandledException('Account not found: ' + accountNumber);
+    }
+}
+Then execute:
+
+apex
+Copy
+Edit
+BankOperations.deposit('BA-00001', 1000);
+Check the debug log to see if it fetched a record or not.
+
+✅ Recommendations:
+Use the actual auto-generated Name of the record (e.g., BA-00001).
+
+You can also query with a different field (like Customer_Name__c) if that's what you're using as an identifier.
+
+If you want to avoid this confusion, change the object setup to use Text instead of Auto Number for the Name field.
+
+Would you like me to adjust the code to use Customer_Name__c or Id instead of Name to make it easier to test?
+
+You said:
+Bank Account Name
+Aditya_P
+Owner
+JYOTIRADITYA PISE
+Account Number
+ACC1001
+Customer Number
+1001
+Balance
+$5,000.00
+Account Type
+Savings
+Created By
+JYOTIRADITYA PISE
+, 5/4/2025, 10:37 AM
+ChatGPT said:
+Thanks! Based on the details you shared, your Bank_Account__c record has:
+
+Account Name: Aditya_P
+
+Account Number: ACC1001
+
+Customer Number: 1001
+
+Balance: $5,000.00
+
+Account Type: Savings
+
+✅ To Run a Transaction Like Deposit or Withdraw
+You mentioned getting an error when trying to deposit or withdraw. Let’s ensure your code is working correctly with Account Number.
+
+✅ Updated Apex Code for Deposit
+Make sure your BankOperations Apex class is written like this:
+
+apex
+Copy
+Edit
+public class BankOperations {
+    public static void deposit(String accNum, Decimal amount) {
+        List<Bank_Account__c> accList = [
+            SELECT Id, Name, Balance__c 
+            FROM Bank_Account__c 
+            WHERE Account_Number__c = :accNum
+            LIMIT 1
+        ];
+
+        if (!accList.isEmpty()) {
+            Bank_Account__c acc = accList[0];
+            acc.Balance__c += amount;
+            update acc;
+        } else {
+            throw new AuraHandledException('Account not found with Account Number: ' + accNum);
+        }
+    }
+}
+Now run this in the Developer Console → Execute Anonymous Window:
+
+apex
+Copy
+Edit
+BankOperations.deposit('ACC1001', 1000);
+✅ For Withdraw:
+apex
+Copy
+Edit
+public static void withdraw(String accNum, Decimal amount) {
+    List<Bank_Account__c> accList = [
+        SELECT Id, Name, Balance__c 
+        FROM Bank_Account__c 
+        WHERE Account_Number__c = :accNum
+        LIMIT 1
+    ];
+
+    if (!accList.isEmpty()) {
+        Bank_Account__c acc = accList[0];
+        if (acc.Balance__c >= amount) {
+            acc.Balance__c -= amount;
+            update acc;
+        } else {
+            throw new AuraHandledException('Insufficient funds in account: ' + accNum);
+        }
+    } else {
+        throw new AuraHandledException('Account not found with Account Number: ' + accNum);
+    }
+}
+✅ What to Check If It Still Fails:
+Ensure the field is actually called Account_Number__c in your object (not Name, AccountNumber__c, or something else).
+
+You can go to Object Manager → Bank_Account__c → Fields and confirm the field name.
+
+In case you're using the Name field (standard Salesforce field), adjust query accordingly:
+
+apex
+Copy
+Edit
+WHERE Name = :accNum
+Would you like a full working code including balance check, deposit, and withdraw in one class?
+
+You said:
+give me complete code
+ChatGPT said:
+Here is the complete working Apex code for your Salesforce bank application using Apex, with deposit, withdraw, and balance check functions. It assumes that:
+
+The object is named Bank_Account__c
+
+You are using a custom field named Account_Number__c (type: Text) to store account numbers like ACC1001
+
+The field Balance__c stores the balance as a number
+
+✅ Complete BankOperations Class
+apex
+Copy
+Edit
+public class BankOperations {
+
+    // Method to deposit amount
+    public static void deposit(String accNum, Decimal amount) {
+        Bank_Account__c acc = getAccountByNumber(accNum);
+        acc.Balance__c += amount;
+        update acc;
+        System.debug('Deposit successful. New Balance: ' + acc.Balance__c);
+    }
+
+    // Method to withdraw amount
+    public static void withdraw(String accNum, Decimal amount) {
+        Bank_Account__c acc = getAccountByNumber(accNum);
+        if (acc.Balance__c >= amount) {
+            acc.Balance__c -= amount;
+            update acc;
+            System.debug('Withdrawal successful. New Balance: ' + acc.Balance__c);
+        } else {
+            throw new AuraHandledException('Insufficient balance for withdrawal.');
+        }
+    }
+
+    // Method to check balance
+    public static Decimal checkBalance(String accNum) {
+        Bank_Account__c acc = getAccountByNumber(accNum);
+        System.debug('Current Balance: ' + acc.Balance__c);
+        return acc.Balance__c;
+    }
+
+    // Utility method to fetch Bank Account record by Account Number
+    private static Bank_Account__c getAccountByNumber(String accNum) {
+        List<Bank_Account__c> accList = [
+            SELECT Id, Account_Number__c, Balance__c
+            FROM Bank_Account__c
+            WHERE Account_Number__c = :accNum
+            LIMIT 1
+        ];
+
+        if (accList.isEmpty()) {
+            throw new AuraHandledException('Account not found: ' + accNum);
+        }
+
+        return accList[0];
+    }
+}
+✅ How to Test It in Developer Console
+1. Deposit:
+
+apex
+Copy
+Edit
+BankOperations.deposit('ACC1001', 1000);
+2. Withdraw:
+
+apex
+Copy
+Edit
+BankOperations.withdraw('ACC1001', 500);
+3. Check Balance:
+
+apex
+Copy
+Edit
+Decimal balance = BankOperations.checkBalance('ACC1001');
+System.debug('Balance is: ' + balance);
+Let me know if you also want a Lightning component or Apex Trigger version for automatic operations.
+
+You said:
+Design and develop custom Application (Mini Project) using Salesforce Cloud
+Develop Online Shopping app
+ChatGPT said:
+Here’s a step-by-step guide to design and develop an Online Shopping App as a Salesforce Mini Project using Salesforce Cloud (Salesforce Platform + Apex + Lightning).
+
+📌 Project Name: Online Shopping App (on Salesforce)
+🎯 Objective:
+To build a custom Salesforce app to simulate an online shopping platform with features like:
+
+Customer Management
+
+Product Catalog
+
+Shopping Cart
+
+Orders
+
+Payments (dummy)
+
+Admin/Product Manager view
+
+✅ STEP 1: Create a New Salesforce App
+Go to Setup → App Manager
+
+Click “New Lightning App”
+
+Name: OnlineShoppingApp
+
+Navigation: Standard Navigation
+
+Include Objects: Custom Tabs (you will add them after creating objects)
+
+Assign to profiles as needed
+
+✅ STEP 2: Create Custom Objects
+📦 1. Product__c
+Product_Name__c (Text)
+
+Price__c (Currency)
+
+Stock_Quantity__c (Number)
+
+Category__c (Picklist: Electronics, Clothing, Books, etc.)
+
+Description__c (Long Text Area)
+
+👤 2. Customer__c
+Full_Name__c (Text)
+
+Email__c (Email)
+
+Address__c (Text Area)
+
+Phone__c (Phone)
+
+🛒 3. Cart_Item__c
+Customer__c (Lookup to Customer)
+
+Product__c (Lookup to Product)
+
+Quantity__c (Number)
+
+Total_Amount__c (Formula: Quantity × Product.Price)
+
+📄 4. Order__c
+Order_Number__c (Auto Number)
+
+Customer__c (Lookup)
+
+Order_Date__c (Date/Time)
+
+Total_Amount__c (Currency)
+
+Status__c (Picklist: Pending, Shipped, Delivered)
+
+✅ STEP 3: Create Tabs for All Custom Objects
+Go to Setup → Tabs
+
+Create tabs for:
+
+Product
+
+Customer
+
+Cart Item
+
+Order
+
+Add these tabs to your OnlineShoppingApp via App Manager.
+
+✅ STEP 4: Apex Classes (Business Logic)
+🧠 Create Helper Class: ShoppingHelper.cls
+apex
+Copy
+Edit
+public class ShoppingHelper {
+    public static void placeOrder(Id customerId) {
+        List<Cart_Item__c> cartItems = [
+            SELECT Id, Product__r.Price__c, Quantity__c, Total_Amount__c
+            FROM Cart_Item__c
+            WHERE Customer__c = :customerId
+        ];
+
+        Decimal total = 0;
+        for (Cart_Item__c item : cartItems) {
+            total += item.Total_Amount__c;
+        }
+
+        Order__c order = new Order__c();
+        order.Customer__c = customerId;
+        order.Order_Date__c = System.now();
+        order.Total_Amount__c = total;
+        order.Status__c = 'Pending';
+        insert order;
+
+        // Clear Cart Items
+        delete cartItems;
+    }
+}
+✅ STEP 5: Lightning Record Pages or Screens (Optional UI)
+Use Lightning App Builder to create:
+
+Product Catalog Page (List view or filtered view)
+
+Customer Dashboard
+
+Order History Page
+
+✅ STEP 6: Sample Test Data
+Create:
+
+5 Products (Electronics, Clothing, etc.)
+
+2 Customers
+
+Simulate Add to Cart and then run ShoppingHelper.placeOrder(customerId) from Developer Console.
+
+✅ STEP 7: Optional Extensions
+Add validation rules (e.g., quantity > 0)
+
+Add approval process for high-value orders
+
+Email alerts using Flow or Process Builder
+
+Lightning Web Component (LWC) for Cart UI
+
+📄 Final Deliverables for Project
+App: OnlineShoppingApp
+
+Custom Objects: Product, Customer, Cart Item, Order
+
+Apex Class: ShoppingHelper.cls
+
+Tabs and Navigation working
+
+Sample demo video or screenshots (optional)
+
+Report PDF/Doc (if required by your instructor)
+
+Would you like a PDF report or sample screenshots for this project?
+
+You said:
+Startting number for auto number of order number 
+ChatGPT said:
+To set the starting number for an Auto Number field like Order_Number__c in Salesforce, follow these steps:
+
+✅ Steps to Set Starting Number for Auto Number Field
+Go to Setup
+Click the gear icon → Setup
+
+Find the Custom Object
+In the Quick Find box, type and click "Objects", then select your custom object — e.g., Order__c
+
+Click on Fields & Relationships
+
+Find and Edit Order_Number__c
+
+Set Display Format
+For example:
+
+Copy
+Edit
+ORD-{0000}
+Set Starting Number
+Example:
+
+yaml
+Copy
+Edit
+1001
+This means your order numbers will look like:
+
+ORD-1001
+
+ORD-1002
+
+ORD-1003
+
+...
+
+Save the changes.
+
+Let me know if you want a custom prefix or format like including the year (ORD-2025-0001), and I’ll help you with that format.
+
+You said:
+How to add the tabs in onlineshopping app
+ChatGPT said:
+To add custom object tabs like Product, Customer, Order, etc., to your OnlineShoppingApp in Salesforce, follow these detailed steps:
+
+✅ Step-by-Step: Add Tabs to OnlineShoppingApp
+1. Open Setup
+Click the gear icon in the top-right → Select “Setup”
+
+2. Navigate to App Manager
+In the Quick Find Box, search and click “App Manager”
+
+Find your app OnlineShoppingApp in the list
+
+Click the dropdown arrow at the end of the row → Click “Edit”
+
+3. Go to “Navigation Items”
+Click Next until you reach the “Navigation Items” step
+
+On this screen, you'll see two lists:
+
+Available Items (on the left)
+
+Selected Items (on the right)
+
+4. Add Your Tabs
+From Available Items, find and move the following to Selected Items:
+
+Products
+
+Customers
+
+Cart Items
+
+Orders
+
+You can drag to reorder if needed.
+
+5. Save and Finish
+Click Next, then Save & Finish
+
+6. Open the App
+Go to the App Launcher (9-dot grid in the top-left)
+
+Search for and open OnlineShoppingApp
+
+You’ll now see the tabs added in the navigation bar
+
+Let me know if you want to also include Dashboards, Reports, or Lightning Pages in the tabs.
+
+You said:
+How to create the helper class
+ChatGPT said:
+To create a Helper Class in Salesforce using Apex (e.g., ShoppingHelper), follow these detailed steps:
+
+✅ Step-by-Step Guide to Create a Helper Class in Salesforce
+Step 1: Open Developer Console
+Click the gear icon at the top-right of Salesforce.
+
+Select Developer Console.
+
+Step 2: Create a New Apex Class
+In Developer Console:
+
+Click File → New → Apex Class
+
+Name it ShoppingHelper
+
+Click OK
+
+Step 3: Write Your Helper Code
+Paste the following sample code:
+
+apex
+Copy
+Edit
+public class ShoppingHelper {
+    
+    // Method to place order for a customer
+    public static void placeOrder(Id customerId) {
+        List<Cart_Item__c> cartItems = [
+            SELECT Id, Product__r.Price__c, Quantity__c, Total_Amount__c
+            FROM Cart_Item__c
+            WHERE Customer__c = :customerId
+        ];
+
+        if (cartItems.isEmpty()) {
+            throw new AuraHandledException('Cart is empty.');
+        }
+
+        Decimal total = 0;
+        for (Cart_Item__c item : cartItems) {
+            total += item.Total_Amount__c;
+        }
+
+        Order__c order = new Order__c();
+        order.Customer__c = customerId;
+        order.Order_Date__c = System.now();
+        order.Total_Amount__c = total;
+        order.Status__c = 'Pending';
+        insert order;
+
+        // Clear the cart
+        delete cartItems;
+    }
+}
+Step 4: Save the Class
+Click File → Save, or press Ctrl + S
+
+Step 5: Test It (Optional)
+You can test this method from the Developer Console > Execute Anonymous Window:
+
+apex
+Copy
+Edit
+ShoppingHelper.placeOrder('a01xxxxxxxxxxxx'); // Replace with actual Customer__c record ID
+Let me know if you’d like to add test classes or unit tests for this helper class too.
+
+You said:
+How to test the app
+ChatGPT said:
+To test your Online Shopping App in Salesforce, you’ll verify each part works properly — objects, relationships, business logic, and UI. Here's a step-by-step guide to thoroughly test the app:
+
+✅ Step-by-Step: How to Test Your Salesforce App
+1. Open the App
+Click the App Launcher (9-dot grid) in the top-left.
+
+Search for and open OnlineShoppingApp.
+
+2. Create Test Records
+A. Add Products
+Go to the Products tab.
+
+Click New → Fill in fields:
+
+Name: Wireless Mouse
+
+Price: 25
+
+Stock Quantity: 100
+
+Category: Electronics
+
+Description: Ergonomic wireless mouse
+
+Save.
+
+B. Add a Customer
+Go to the Customers tab.
+
+Click New → Fill in:
+
+Full Name: John Doe
+
+Email: john@example.com
+
+Address, Phone
+
+Save.
+
+C. Add Cart Items
+Go to Cart Items tab.
+
+Click New
+
+Select Customer (John Doe)
+
+Select Product (Wireless Mouse)
+
+Quantity: 2
+
+Save.
+
+3. Run Apex Code to Place Order
+Click the gear icon → Developer Console
+
+Open Execute Anonymous Window: Debug → Open Execute Anonymous Window
+
+Enter this code (replace ID with actual Customer ID):
+
+apex
+Copy
+Edit
+// Replace the ID with the actual Customer record ID
+ShoppingHelper.placeOrder('a01xxxxxxxxxxxx');
+Click Execute
+
+4. Verify the Order
+Go to Orders tab.
+
+Check that a new order is created for John Doe with total amount 2 × $25 = $50.
+
+Verify the order status is Pending.
+
+5. Verify Cart Is Cleared
+Go back to Cart Items tab.
+
+Check that items for John Doe are deleted.
+
+6. Optional Tests
+Try placing an order when the cart is empty (should throw an error).
+
+Add validation rules and test them.
+
+Check UI layouts on desktop and mobile view.
+
+Would you like help writing test classes to validate this automatically during deployment?
+
+You said:
+App launcher not showing onlineshoppingapp
+ChatGPT said:
+If App Launcher is not showing your OnlineShoppingApp, follow these steps to troubleshoot and make it visible:
+
+✅ Step-by-Step Fix: Make App Visible in App Launcher
+1. Check App Visibility Settings
+Click the gear icon → Go to Setup
+
+In the Quick Find, search for and click App Manager
+
+Find your OnlineShoppingApp in the list
+
+Click the dropdown at the end → Click Edit
+
+Under App Settings → click App Options
+
+Make sure:
+
+“App Type” is set to Lightning
+
+“Navigation Style” is set to Standard Navigation
+
+“App Name” is correctly filled
+
+Under User Profiles, assign your profile (e.g., System Administrator) to this app
+
+2. Assign App to Profile (if missed above)
+Go to Profiles in Setup
+
+Click on your profile (e.g., System Administrator)
+
+Scroll to Assigned Apps
+
+Click Edit and check OnlineShoppingApp
+
+Save
+
+3. Check App Visibility
+Now click the App Launcher (9-dot grid) again
+
+Search for OnlineShoppingApp
+
+If found, click it to open
+
+Still Not Showing?
+Try logging out and logging in again
+
